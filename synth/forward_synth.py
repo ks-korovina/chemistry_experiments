@@ -17,7 +17,7 @@ Notes:
 
 import sys
 # sys.path.append("/Users/ksk/Desktop/CMU/DOE/chemistry")
-sys.path.append("/Users/ksk/Desktop/CMU/DOE/chemistry/synth")
+# sys.path.append("/Users/ksk/Desktop/CMU/DOE/chemistry/synth")
 
 from rexgen_direct.core_wln_global.directcorefinder import DirectCoreFinder 
 from rexgen_direct.scripts.eval_by_smiles import edit_mol

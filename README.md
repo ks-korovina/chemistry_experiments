@@ -13,3 +13,11 @@
 
 * **data** contains datasets, data structures and helpers for handling molecules.
 * **synth** contains models for performing synthesis (such as forward reaction prediction) in separation of the remaining framework. Data for training the model is stored in 'data/datasets/synth_data'. A better option would be training the predictor jointly with DOE, but that may be too difficult.
+
+## Getting started:
+
+Set PYTHONPATH for imports:
+
+```
+export PYTHONPATH=":$PWD/rdkit_contrib:$PWD/synth/:$PWD/synth/rexgen_direct"
+```

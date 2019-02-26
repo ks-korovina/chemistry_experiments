@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/Users/ksk/Desktop/CMU/DOE/chemistry/rexgen_direct")
+# sys.path.append("/Users/ksk/Desktop/CMU/DOE/chemistry/rexgen_direct")
 
 import tensorflow as tf
 from rexgen_direct.rank_diff_wln.nn import linearND, linear
