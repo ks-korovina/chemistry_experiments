@@ -13,7 +13,11 @@ TODO:
 """
 
 import numpy as np
+from time import time
 from synth.forward_synth import RexgenForwardSynthesizer
+from rdkit import Chem
+from rdkit_contrib.sascorer import calculateScore as calculateSAScore
+from data.data_struct import Molecule
 
 class Explorer:
 	"""
@@ -27,11 +31,12 @@ class RandomExplorer(Explorer):
 	Implements a random evolutionary algorithm
 	for exploring molecule space.
 	"""
-	def __init__(self, fitness_func, initial_pool=None):
+	def __init__(self, fitness_func, initial_pool, max_pool_size=None):
 		"""
 		Params:
 		:fitness_func: function to optimize over evolution
 		:initial_pool: just what it says
+		:max_pool_size: int or None
 
 		TODO:
 		:mutation_op: mutates a given Molecule
@@ -41,12 +46,12 @@ class RandomExplorer(Explorer):
 		self.fitness_func = fitness_func
 		self.synth = RexgenForwardSynthesizer()
 		self.pool = initial_pool
-		self.max_pool_size = 5
+		self.max_pool_size = max_pool_size
 
-		# start up a database?
-		# save ops as partials?
+		# TODO: how to keep synthesis paths?
 
-	def evolve_step(self, data):
+
+	def evolve_step(self):
 		"""
 		TODO docs
 		"""
@@ -54,7 +59,7 @@ class RandomExplorer(Explorer):
 		# choose molecules to cross-over
 		r_size = np.random.randint(2,3)
 		mols = np.random.choice(self.pool, size=r_size)
-		print(mols)
+		# print(mols)
 
 		# evolve
 		outcomes = self.synth.predict_outcome(mols)
@@ -66,15 +71,18 @@ class RandomExplorer(Explorer):
 			self.pool = sorted(self.pool, key=lambda mol: self.fitness_func(mol))[-self.max_pool_size:]
 
 
-	def evolve(self, data, capital):
+	def evolve(self, capital):
 		"""
 		Params:
 		:data: start dataset (list of Molecules)
 		:capital: number of steps or other cost of exploration
 		"""
 		for _ in range(capital):
-			self.evolve_step(data)
+			self.evolve_step()
 
+	def get_best(self, k):
+		top = sorted(self.pool, key=lambda mol: self.fitness_func(mol))[-k:]
+		return top
 
 	# not necessarily a good idea
 	# def __next__(self):
@@ -95,7 +103,6 @@ def mutate_random(mol, database):
 	
 	pass
 
-
 def mutate_forward_synth_random(mol, database):
 	"""
 	Takes a molecule and randomly "bump" into each other.
@@ -103,25 +110,44 @@ def mutate_forward_synth_random(mol, database):
 	"""
 	pass
 
-
 # mutation ops that are guided:
 def mutate_random_guided(mol, eval_func, database):
 	pass
-
 
 def mutate_forward_synth_guided(mol, eval_func, database):
 	pass
 
 
 if __name__=="__main__":
-	# Stupid example with len-of-smiles fitness
-	dummy_func = lambda mol: len(mol)
+	# Temporarily funcs operate on SMILES strings
+	dummy_func = lambda mol: len(mol.smiles)
+	sas_func = lambda mol: calculateSAScore(Chem.MolFromSmiles(mol.smiles))
+	print(sas_func(Molecule("CC")))
+
 	test_pool = ["CC", "O=C=O", "C#N", "CCN(CC)CC", "CC(=O)O", "C1CCCCC1", "c1ccccc1"]
+	test_pool = [Molecule(smiles) for smiles in test_pool]
+
+	###### Stupid example with len-of-smiles fitness #
 	exp = RandomExplorer(dummy_func, initial_pool=test_pool)
-	exp.evolve(None, 5)
+	print("Starting len of SMILES optimization")
+	exp.evolve(2)
 
 	#check
 	print(exp.pool)
+
+	###### SA optimization example #
+	exp = RandomExplorer(sas_func, initial_pool=test_pool)
+	print("Starting SA score optimization")
+	t0 = time()
+	exp.evolve(10)
+
+	#check
+	print("Completed SA score optimization, time elapsed: %.3fs" % (time()-t0))
+	print(exp.pool)
+	top = exp.get_best(1)[0]
+	print(top.get_synthesis_path())
+
+
 
 
 

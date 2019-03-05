@@ -22,6 +22,8 @@ import sys
 from rexgen_direct.core_wln_global.directcorefinder import DirectCoreFinder 
 from rexgen_direct.scripts.eval_by_smiles import edit_mol
 from rexgen_direct.rank_diff_wln.directcandranker import DirectCandRanker
+from data.data_struct import Molecule
+
 
 TEMP = ["[CH3:26][c:27]1[cH:28][cH:29][cH:30][cH:31][cH:32]1", 
         "[Cl:18][C:19](=[O:20])[O:21][C:22]([Cl:23])([Cl:24])[Cl:25]",
@@ -58,25 +60,30 @@ class RexgenForwardSynthesizer:
         self.directcandranker = DirectCandRanker()
         self.directcandranker.load_model()
 
-    def predict_outcome(self, list_of_mols=TEMP, k=1):
+    def predict_outcome(self, list_of_mols, k=1):
         """
         Using a predictor, produce top-k most likely reactions
         
         Params:
-        :list_of_mols: list of reactants and reagents (smiles format)
+        :list_of_mols: list of reactants and reagents (both of class Molecule)
                        (former contribute atoms, latter don't)
         """
-        react = ".".join(list_of_mols)
+        react = ".".join([m.smiles for m in list_of_mols])
         (react, bond_preds, bond_scores, cur_att_score) = self.directcorefinder.predict(react)
         outcomes = self.directcandranker.predict(react, bond_preds, bond_scores)
-        # for outcome in outcomes:
-        #     print(outcome)
-        res = [out["smiles"][0] for out in outcomes[:k]]
+
+        res = []
+        for out in outcomes[:k]:
+            smiles = out["smiles"][0]
+            mol = Molecule(smiles)
+            mol.set_synthesis(list_of_mols)
+            res.append(mol)
+
         return res
 
 
 if __name__=="__main__":
     t = RexgenForwardSynthesizer()
-    t.predict_outcome()
+    t.predict_outcome(TEMP)
 
 
