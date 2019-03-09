@@ -7,16 +7,26 @@ TODO:
 
 """
 
+from rdkit import Chem
 
 class Molecule:
 	"""
 	Class to hold both representations,
 	as well as synthesis path, of a molecule.
 	"""
-	def __init__(self, smiles=None, graph=None):
-		assert smiles is None or isinstance(smiles, str)
+	def __init__(self, smiles=None, graph=None,
+				 check_enabled=False):
+		if check_enabled:
+			if isinstance(smiles, str):
+				# also checks if smiles can be parsed
+				graph = Chem.MolFromSmiles(smiles)
+				assert graph is not None
+			elif graph is not None:
+				smiles = Chem.MolToSmiles(graph)
+			else:
+				raise ValueError("Invalid arguments")
+
 		self.smiles = smiles
-		# TODO: add type assertion
 		self.graph = graph
 		self.synthesis_path = []  # list of Reactions
 		self.begin_flag = True

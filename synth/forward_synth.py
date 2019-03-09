@@ -3,7 +3,8 @@
 Implements forward synthesis
 
 TODO:
-* convert from string representations to general Molecule class
+* add better checks for parseability into the Mol class
+* look into rexgen to find the problem/make it less verbose
 
 Notes:
 * Using pretrained models - are there any?
@@ -16,8 +17,6 @@ Notes:
 """
 
 import sys
-# sys.path.append("/Users/ksk/Desktop/CMU/DOE/chemistry")
-# sys.path.append("/Users/ksk/Desktop/CMU/DOE/chemistry/synth")
 
 from rexgen_direct.core_wln_global.directcorefinder import DirectCoreFinder 
 from rexgen_direct.scripts.eval_by_smiles import edit_mol
@@ -63,13 +62,16 @@ class RexgenForwardSynthesizer:
     def predict_outcome(self, list_of_mols, k=1):
         """
         Using a predictor, produce top-k most likely reactions
-        
+
         Params:
         :list_of_mols: list of reactants and reagents (both of class Molecule)
                        (former contribute atoms, latter don't)
         """
         react = ".".join([m.smiles for m in list_of_mols])
         (react, bond_preds, bond_scores, cur_att_score) = self.directcorefinder.predict(react)
+
+        #---> TODO: add input check here: some molecules seem to be 'unparseable' <---#
+        # this might be a problem of Rexgen, though
         outcomes = self.directcandranker.predict(react, bond_preds, bond_scores)
 
         res = []
