@@ -1,6 +1,7 @@
 .DS_Store
 **/*.pyc
 **/*.tar
+**/*.npy
 datasets/
 **/__pycache__
 **/model-300-3-direct

@@ -7,7 +7,7 @@ TODO:
 * look into rexgen to find the problem/make it less verbose
 
 Notes:
-* Using pretrained models - are there any?
+* Using pretrained models:
 * There is code for MoleculeTransformers:
   see https://github.com/pschwllr/MolecularTransformer
   so train it?
@@ -31,61 +31,60 @@ TEMP = ["[CH3:26][c:27]1[cH:28][cH:29][cH:30][cH:31][cH:32]1",
 
 
 class ForwardSynthesizer:
-    """
-    Class for answering forward prediction queries.
+  """
+  Class for answering forward prediction queries.
+  """
+  def __init__(self):
+    # load trained model
+    pass
 
+  def predict_outcome(self, list_of_mols):
     """
-    def __init__(self):
-        # load trained model
-        pass
-
-    def predict_outcome(self, list_of_mols):
-        """
-        Using a predictor, produce the most likely reaction
-        
-        Params:
-        :list_of_mols: list of reactants and reagents
-                       (former contribute atoms, latter don't)
-        TODO: what else?
-        """
-        pass
+    Using a predictor, produce the most likely reaction
+    
+    Params:
+    :list_of_mols: list of reactants and reagents
+                    (former contribute atoms, latter don't)
+    TODO: what else?
+    """
+    pass
 
 
 class RexgenForwardSynthesizer:
-    def __init__(self):
-        # load trained model
-        self.directcorefinder = DirectCoreFinder()
-        self.directcorefinder.load_model()
-        self.directcandranker = DirectCandRanker()
-        self.directcandranker.load_model()
+  def __init__(self):
+    # load trained model
+    self.directcorefinder = DirectCoreFinder()
+    self.directcorefinder.load_model()
+    self.directcandranker = DirectCandRanker()
+    self.directcandranker.load_model()
 
-    def predict_outcome(self, list_of_mols, k=1):
-        """
-        Using a predictor, produce top-k most likely reactions
+  def predict_outcome(self, list_of_mols, k=1):
+    """
+    Using a predictor, produce top-k most likely reactions
 
-        Params:
-        :list_of_mols: list of reactants and reagents (both of class Molecule)
-                       (former contribute atoms, latter don't)
-        """
-        react = ".".join([m.smiles for m in list_of_mols])
-        (react, bond_preds, bond_scores, cur_att_score) = self.directcorefinder.predict(react)
+    Params:
+    :list_of_mols: list of reactants and reagents (both of class Molecule)
+                   (former contribute atoms, latter don't)
+    """
+    react = ".".join([m.smiles for m in list_of_mols])
+    (react, bond_preds, bond_scores, cur_att_score) = self.directcorefinder.predict(react)
 
-        #---> TODO: add input check here: some molecules seem to be 'unparseable' <---#
-        # this might be a problem of Rexgen, though
-        outcomes = self.directcandranker.predict(react, bond_preds, bond_scores)
+    #---> TODO: add input check here: some molecules seem to be 'unparseable' <---#
+    # this might be a problem of Rexgen, though
+    outcomes = self.directcandranker.predict(react, bond_preds, bond_scores)
 
-        res = []
-        for out in outcomes[:k]:
-            smiles = out["smiles"][0]
-            mol = Molecule(smiles)
-            mol.set_synthesis(list_of_mols)
-            res.append(mol)
+    res = []
+    for out in outcomes[:k]:
+      smiles = out["smiles"][0]
+      mol = Molecule(smiles)
+      mol.set_synthesis(list_of_mols)
+      res.append(mol)
 
-        return res
+    return res
 
 
 if __name__=="__main__":
-    t = RexgenForwardSynthesizer()
-    t.predict_outcome(TEMP)
+  t = RexgenForwardSynthesizer()
+  t.predict_outcome(TEMP)
 
 
