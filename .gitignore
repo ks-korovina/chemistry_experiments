@@ -1,7 +1,7 @@
 .DS_Store
 **/*.pyc
 **/*.tar
-data/datasets/
+datasets/
 **/__pycache__
 **/model-300-3-direct
 synth/rexgen_direct/data

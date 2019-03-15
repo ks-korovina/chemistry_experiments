@@ -22,7 +22,7 @@ from time import time
 from synth.forward_synth import RexgenForwardSynthesizer
 from rdkit import Chem
 from rdkit_contrib.sascorer import calculateScore as calculateSAScore
-from data.data_struct import Molecule
+from mols.data_struct import Molecule
 
 class Explorer:
 	"""
@@ -124,7 +124,7 @@ def mutate_forward_synth_guided(mol, eval_func, database):
 	pass
 
 
-def chembl_prop_exp(path="./data/datasets/ChEMBL_prop.txt"):
+def chembl_prop_exp(path="./datasets/ChEMBL_prop.txt"):
 	""" Returns (pool, smile->prop mappings) """
 
 	df = pd.read_csv(path, sep="\t", header=None)
