@@ -8,7 +8,7 @@
 # pylint: disable=invalid-name
 
 import numpy as np
-import ot
+# import ot
 from warnings import warn
 # Local imports
 try:

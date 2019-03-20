@@ -1,7 +1,8 @@
 """
 Module for BO with graph kernel and synthesizeable exploration.
-
 Core class is Chemist
+Author: kkorovin@cs.cmu.edu
+
 
 TODO:
 * complete all places with ImplementMe

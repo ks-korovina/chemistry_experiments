@@ -1,7 +1,6 @@
 """
-
 Data structures to use within the framework.
-A:  kkorovin@cs.cmu.edu
+Author: kkorovin@cs.cmu.edu
 
 TODO:
     - enums for edge and node types

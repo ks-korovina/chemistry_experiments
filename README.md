@@ -75,5 +75,8 @@ TBA
 
 ## Credits
 
-TBA
+* [Nasbot](https://github.com/kirthevasank/nasbot) - BO
+* Rexgen - forward synthesis
+* Datasets?
+
 

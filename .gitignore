@@ -2,7 +2,8 @@
 **/*.pyc
 **/*.tar
 **/*.npy
-datasets/
+datasets/*
+!datasets/loaders.py
 **/__pycache__
 **/model-300-3-direct
 synth/rexgen_direct/data

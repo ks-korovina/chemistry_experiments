@@ -1,7 +1,7 @@
 """
 
 Molecular kernels unit tests.
-A:  kkorovin@cs.cmu.edu
+Author: kkorovin@cs.cmu.edu
 
 """
 

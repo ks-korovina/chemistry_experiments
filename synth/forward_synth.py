@@ -1,6 +1,8 @@
 """
 
 Implements forward synthesis
+Author: kkorovin@cs.cmu.edu
+
 
 TODO:
 * add better checks for parseability into the Mol class

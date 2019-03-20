@@ -1,7 +1,8 @@
 """
-
 Class that performs molecule space traversal
 Currently the interface is only targeting EA algorithms.
+Author: kkorovin@cs.cmu.edu
+
 
 TODO:
 * Make a superclass for all exporatory algorithms
@@ -20,6 +21,7 @@ from synth.forward_synth import RexgenForwardSynthesizer
 from rdkit import Chem
 from rdkit_contrib.sascorer import calculateScore as calculateSAScore
 from mols.data_struct import Molecule
+from datasets.loaders import get_chembl_prop
 
 
 class Explorer:
@@ -88,13 +90,4 @@ class RandomExplorer(Explorer):
         top = sorted(self.pool, key=lambda mol: self.fitness_func(mol))[-k:]
         return top
 
-
-def chembl_prop_exp(path="./datasets/ChEMBL_prop.txt"):
-    """ Returns (pool, smile->prop mappings) """
-
-    df = pd.read_csv(path, sep="\t", header=None)
-    # smile: v for the first of two properties
-    smile_to_prop = {s: v for (s, v) in zip(df[0], df[1])}
-    smile_to_prop = defaultdict(int, smile_to_prop)
-    return df[0].values, smile_to_prop
 

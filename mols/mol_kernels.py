@@ -6,10 +6,8 @@ Kernels on molecules:
     Can be computed using graphkernels package.
 2) String-based kernels: operate on SMILES strings
      TBA
+Author: kkorovin@cs.cmu.edu
 
-Author:  kkorovin@cs.cmu.edu
-
-*******************************************************************************
 
 TODO:
     - Issue: for some reason graphkernels fails when graphs are attributed,
@@ -34,14 +32,7 @@ import graphkernels.kernels as gk
 
 from gp.kernel import Kernel
 
-KERNEL_FUNCS = {
-                "edgehist_kernel": compute_edgehist_kernel,
-                "wl_kernel": compute_wl_kernel
-                }
-
 # Graph-based kernels ---------------------------------------------------------
-# TODO: already in the Random.ipynb notebook, transfer here
-
 
 def mol2graph_igraph(mol):
     """
@@ -113,14 +104,55 @@ Kernels available in graphkernels: TODO into functions
 """
 
 """
+
 Base class Kernel has a call method
+most kernels from graphkernels have only one parameter:
+it is either an integer or a continuous quantity
+
 """
 
+def compute_edgehist_kernel(mols, params):
+    """
+    Compute edge hist kernel
+    Arguments:
+            mols {list[Molecule]} -- [description]
+    """
+    mol_graphs_list = [mol2graph_igraph(m) for m in mols]
+    return gk.CalculateEdgeHistKernel(mol_graphs_list,
+                                      par=params["cont_par"])
+
+
+def compute_wl_kernel(mols, params):
+    """
+    Compute edge hist kernel
+    Arguments:
+            mols {list[Molecule]} -- [description]
+    """
+    mol_graphs_list = [mol2graph_igraph(m) for m in mols]
+    return gk.CalculateWLKernel(mol_graphs_list,
+                                par=params["int_par"])
+
+
+KERNEL_FUNCS = {
+                "edgehist_kernel": compute_edgehist_kernel,
+                "wl_kernel":       compute_wl_kernel
+                }
+
+
 class MolKernel(Kernel):
-    def __init__(self, kernel_type):
+    def __init__(self, kernel_type, kernel_hyperparams):
         if kernel_type not in KERNEL_FUNCS:
             raise ValueError('Unknown kernel_type %s.'%kernel_type)
         self.kernel_func = KERNEL_FUNCS[kernel_type]
+        # for hp_name in kernel_hyperparams:
+        #     setattr(self, hp_name, kernel_hyperparams[hp_name])
+        self.params = kernel_hyperparams
+
+    def is_guaranteed_psd(self):
+        return False
+
+    def _child_evaluate(self, X1, X2):
+        return self.compute_dists(X1, X2)
 
     def compute_dists(self, X1, X2):
         """
@@ -128,30 +160,10 @@ class MolKernel(Kernel):
         all pairwise distances between them
         (of size n1 x n2)
         """
-        bigmat = self.kernel_func(X1 + X2)
+        # print("here are params:", self.params)
+        bigmat = self.kernel_func(X1 + X2, self.params)
         n1 = len(X1)
         return bigmat[:n1, n1:]
-
-
-def compute_edgehist_kernel(mols):
-    """
-    Compute edge hist kernel
-    Arguments:
-            mols {list[Molecule]} -- [description]
-    """
-    mol_graphs_list = [mol2graph_igraph(m) for m in mols]
-    return gk.CalculateEdgeHistKernel(mol_graphs_list)
-
-
-def compute_wl_kernel(mols):
-    """
-    Compute edge hist kernel
-    Arguments:
-            mols {list[Molecule]} -- [description]
-    """
-    mol_graphs_list = [mol2graph_igraph(m) for m in mols]
-    return gk.CalculateWLKernel(mol_graphs_list)
-
 
 
 # String-based kernels ---------------------------------------------------------
