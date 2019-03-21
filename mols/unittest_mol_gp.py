@@ -14,19 +14,38 @@ import numpy as np
 from mols import mol_gp
 from datasets.loaders import get_chembl
 from utils.base_test_class import BaseTestClass, execute_tests
+from utils.option_handler import load_options
 from mols.funcs import SAScore
+
+_TOL = 1e-5
+
+func = SAScore
+func = lambda mol: len(mol.smiles)
 
 
 def gen_gp_test_data():
     """ Xs are molecules, Ys are some numeric value """
-    n_all = 2000
+    n_all = 100
 
-    mols = get_chembl(n_all)
+    mols = get_chembl(n_all * 3)
+    ys = np.array([func(m) for m in mols])
+
+    mols1, mols2, mols3 = mols[:n_all], mols[n_all:2*n_all], mols[2*n_all:3*n_all]
+    ys1, ys2, ys3 = ys[:n_all], ys[n_all:2*n_all], ys[2*n_all:3*n_all]
+
     n_train = int(n_all * 0.8)
     ys = np.array([SAScore(m) for m in mols])
-    X1_tr, X1_te = mols[:n_train], mols[n_train:]
-    Y1_tr, Y1_te = ys[:n_train], ys[n_train:]
-    return [(X1_tr, Y1_tr, X1_te, Y1_te)]
+
+    X1_tr, X1_te = mols1[:n_train], mols1[n_train:]
+    Y1_tr, Y1_te = ys1[:n_train], ys1[n_train:]
+    X2_tr, X2_te = mols2[:n_train], mols2[n_train:]
+    Y2_tr, Y2_te = ys2[:n_train], ys2[n_train:]
+    X3_tr, X3_te = mols3[:n_train], mols3[n_train:]
+    Y3_tr, Y3_te = ys3[:n_train], ys3[n_train:]
+
+    return [(X1_tr, Y1_tr, X1_te, Y1_te),
+            (X2_tr, Y2_tr, X2_te, Y2_te),
+            (X3_tr, Y3_tr, X3_te, Y3_te)]
 
 
 # Some utilities we will need for testing ------------------------------------------------
@@ -103,12 +122,90 @@ class MolGPTestCase(BaseTestClass):
         assert succ_frac > 0.5
 
 
-class MolGPFitterTestCase(BaseTestClass):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def test_hallucinated_predictions(self):
+        """ Testing hallucinated predictions for NNGP. """
+        self.report('Testing hallucinated predictions for MolGP.')
+        for dataset in self.datasets:
+            for kernel_type in self.kernel_types:
+                curr_gp = build_molgp_with_dataset(dataset, kernel_type)
+                curr_preds, curr_stds = curr_gp.eval(dataset[2][1:], 'std')
+                ha_preds, ha_stds = curr_gp.eval_with_hallucinated_observations(
+                                    dataset[2][1:], dataset[0][4:] + dataset[2][:1], 'std')
+                assert np.linalg.norm(curr_preds - ha_preds) < _TOL
+                assert np.all(curr_stds > ha_stds)
 
-    def test1(self):
-        pass
+
+class MolGPFitterTestCase(BaseTestClass):
+    """ Contains unit tests for the TransportNNDistanceComputer class. """
+    def __init__(self, *args, **kwargs):
+        """ Constructor. """
+        super(MolGPFitterTestCase, self).__init__(*args, **kwargs)
+        self.datasets = gen_gp_test_data()
+        self.kernel_types = ['wl_kernel', "edgehist_kernel"]
+
+    @classmethod
+    def _read_kernel_hyperparams(cls, kernel_hyperparams):
+        """ Returns the kernel hyper-params as a string. """
+        return ",".join([k + "_" + str(v)
+            for k, v in kernel_hyperparams.items()])
+
+    def test_marg_likelihood_and_prediction(self):
+        """ Tests marginal likelihood and prediction. """
+        # pylint: disable=too-many-locals
+        self.report('Testing evaluation and marginal likelihood on Fitted GP.' +
+                    ' Probabilistic test, might fail.')
+        num_tests = 0
+        num_lml_successes = 0
+        num_const_err_successes = 0
+        num_naive_err_successes = 0
+        for dataset_idx, dataset in enumerate(self.datasets):
+            for kernel_type in self.kernel_types:
+                # Build the naive GP
+                naive_gp = build_molgp_with_dataset(dataset, kernel_type)
+                # Obtain a fitted GP
+                fitted_gp = fit_molgp_with_dataset(dataset, kernel_type)
+                # Obtain log marginal likelihoods
+                naive_lml  = naive_gp.compute_log_marginal_likelihood()
+                fitted_lml = fitted_gp.compute_log_marginal_likelihood()
+                lml_succ = naive_lml < fitted_lml
+                num_lml_successes += lml_succ
+                self.report(('(%s, ntr=%d, nte=%d):: naive-gp-lml=%0.4f, ' +
+                           'fitted-gp-lml=%0.4f, lml-succ=%d.')%(
+                           kernel_type, len(dataset[0]), len(dataset[2]), naive_lml,
+                           fitted_lml, lml_succ), 'test_result')
+                # Predictions & Marginal likelihood
+                naive_preds, _ = naive_gp.eval(dataset[2], 'std')
+                naive_gp_err = compute_average_prediction_error(dataset, naive_preds)
+                fitted_preds, _ = fitted_gp.eval(dataset[2], 'std')
+                fitted_gp_err = compute_average_prediction_error(dataset, fitted_preds)
+                const_err = compute_average_prediction_error(dataset, dataset[1].mean())
+                const_err_succ = const_err > fitted_gp_err
+                naive_err_succ = naive_gp_err > fitted_gp_err
+                num_const_err_successes += const_err_succ
+                num_naive_err_successes += naive_err_succ
+                self.report(('  dataset #%d: const-err: %0.4f (%d), naive-gp-err=%0.4f (%d), ' +
+                           'fitted-gp-err=%0.4f.')%(
+                           dataset_idx, const_err, const_err_succ,
+                           naive_gp_err, naive_err_succ, fitted_gp_err),
+                          'test_result')
+                # Print out betas
+                self.report('  fitted kernel %s hyper-params: %s'%(kernel_type,
+                          self._read_kernel_hyperparams(fitted_gp.kernel.hyperparams)),
+                          'test_result')
+                num_tests += 1
+        # Print out some statistics
+        lml_frac = float(num_lml_successes) / float(num_tests)
+        const_err_frac = float(num_const_err_successes) / float(num_tests)
+        naive_err_frac = float(num_naive_err_successes) / float(num_tests)
+        self.report('LML tests success fraction = %d/%d = %0.4f'%(
+                    num_lml_successes, num_tests, lml_frac), 'test_result')
+        self.report('Const-err success fraction = %d/%d = %0.4f'%(
+                    num_const_err_successes, num_tests, const_err_frac), 'test_result')
+        self.report('Naive-GP-err success fraction = %d/%d = %0.4f'%(
+                    num_naive_err_successes, num_tests, naive_err_frac), 'test_result')
+        assert num_lml_successes == num_tests
+        assert const_err_frac >= 0.5
+        assert naive_err_frac >= 0.3
 
 
 if __name__=="__main__":

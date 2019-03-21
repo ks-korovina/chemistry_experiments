@@ -24,7 +24,13 @@ ChEMBL data can be found here: https://github.com/kevinid/molecule_generator/rel
 
 ### Installing dependencies
 
-Set up environment for RDKit:
+**Fortran compiler.**
+
+Computations are faster with `direct fortran` library installed (moreover, some of the computations seem to depend on having direct fortran). For this `cd` into `utils/direct_fortran` and run `bash make_direct.sh`. You will need a fortran compiler such as gnu95, which in the case of MacOS can be installed from [here](https://github.com/fxcoudert/gfortran-for-macOS). Once this is done, you can run `simple_direct_test.py` to make sure that it was installed correctly.
+
+**Python packages.** 
+
+Next, set up environment for RDKit:
 
 ```bash
 conda create -c rdkit -n my-rdkit-env rdkit

@@ -213,7 +213,7 @@ class GP(object):
   def compute_log_marginal_likelihood(self):
     """ Computes the log marginal likelihood. """
     Y_centred = self.Y - self.mean_func(self.X)
-    ret = -0.5 * Y_centred.T.dot(self.alpha) - (np.log(np.diag(self.L))).sum() \
+    ret = - 0.5 * Y_centred.T.dot(self.alpha) - (np.log(np.diag(self.L))).sum() \
           - 0.5 * self.num_tr_data * np.log(2*np.pi)
     return ret
 

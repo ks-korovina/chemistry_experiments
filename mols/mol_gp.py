@@ -19,6 +19,7 @@ it is a component of kernels in nasbot, so I shouldn't need it
 
 """
 
+import numpy as np
 from mol_kernels import MolKernel
 from gp import gp_core
 from gp.gp_instances import basic_gp_args
@@ -122,10 +123,10 @@ class MolGPFitter(gp_core.GPFitter):
         
         # 2. int_par/cont_par ---------------------------------------
         if self.kernel_type == "wl_kernel":
-            int_bounds = [0, 10]
+            int_bounds = [2, 3]
             self.hp_bounds.append(int_bounds)
         elif self.kernel_type == "edgehist_kernel":
-            cont_par = [0.1, 5.]
+            cont_bounds = [0.1, 5.]
             self.hp_bounds.append(cont_bounds)
 
     def _child_set_up_post_sampling(self):
@@ -146,10 +147,10 @@ class MolGPFitter(gp_core.GPFitter):
 
         # SETTING kernel_hyperparams BASED ON KERNEL TYPE--------------------------
         if self.kernel_type == "wl_kernel":
-            kernel_hyperparams["int_par"] = gp_hyperparams[:1]
+            kernel_hyperparams["int_par"] = gp_hyperparams[:1][0]
             gp_hyperparams = gp_hyperparams[1:]
         elif self.kernel_type == "edgehist_kernel":
-            kernel_hyperparams["cont_par"] = gp_hyperparams[:1]
+            kernel_hyperparams["cont_par"] = gp_hyperparams[:1][0]
             gp_hyperparams = gp_hyperparams[1:]
 
         return MolGP(self.X, self.Y, self.kernel_type, 

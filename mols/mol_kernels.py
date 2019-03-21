@@ -117,9 +117,10 @@ def compute_edgehist_kernel(mols, params):
     Arguments:
             mols {list[Molecule]} -- [description]
     """
+    par = params["cont_par"]
     mol_graphs_list = [mol2graph_igraph(m) for m in mols]
     return gk.CalculateEdgeHistKernel(mol_graphs_list,
-                                      par=params["cont_par"])
+                                      par=par)
 
 
 def compute_wl_kernel(mols, params):
@@ -128,9 +129,10 @@ def compute_wl_kernel(mols, params):
     Arguments:
             mols {list[Molecule]} -- [description]
     """
+    par = int(params["int_par"])
     mol_graphs_list = [mol2graph_igraph(m) for m in mols]
     return gk.CalculateWLKernel(mol_graphs_list,
-                                par=params["int_par"])
+                                par=par)
 
 
 KERNEL_FUNCS = {
@@ -146,10 +148,10 @@ class MolKernel(Kernel):
         self.kernel_func = KERNEL_FUNCS[kernel_type]
         # for hp_name in kernel_hyperparams:
         #     setattr(self, hp_name, kernel_hyperparams[hp_name])
-        self.params = kernel_hyperparams
+        self.hyperparams = kernel_hyperparams
 
     def is_guaranteed_psd(self):
-        return False
+        return True
 
     def _child_evaluate(self, X1, X2):
         return self.compute_dists(X1, X2)
@@ -161,7 +163,7 @@ class MolKernel(Kernel):
         (of size n1 x n2)
         """
         # print("here are params:", self.params)
-        bigmat = self.kernel_func(X1 + X2, self.params)
+        bigmat = self.kernel_func(X1 + X2, self.hyperparams)
         n1 = len(X1)
         return bigmat[:n1, n1:]
 
