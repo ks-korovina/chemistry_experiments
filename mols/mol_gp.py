@@ -20,7 +20,7 @@ it is a component of kernels in nasbot, so I shouldn't need it
 """
 
 import numpy as np
-from mol_kernels import MolKernel
+from mols.mol_kernels import MolKernel
 from gp import gp_core
 from gp.gp_instances import basic_gp_args
 from utils.ancillary_utils import get_list_of_floats_as_str

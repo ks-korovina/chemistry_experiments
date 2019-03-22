@@ -17,11 +17,21 @@ from tqdm import tqdm
 from collections import defaultdict
 from time import time
 
+from chemist_opt.blackbox_optimiser import blackbox_opt_args
 from synth.forward_synth import RexgenForwardSynthesizer
 from rdkit import Chem
 from rdkit_contrib.sascorer import calculateScore as calculateSAScore
 from mols.data_struct import Molecule
 from datasets.loaders import get_chembl_prop
+
+ga_opt_args = [
+  # get_option_specs('num_mutations_per_epoch', False, 50,
+  #   'Number of mutations per epoch.'),
+  # get_option_specs('num_candidates_to_mutate_from', False, -1,
+  #   'The number of candidates to choose the mutations from.'),
+  # get_option_specs('fitness_sampler_scaling_const', False, 2,
+  #   'The scaling constant for sampling according to exp_probs.'),
+]
 
 
 class Explorer:
@@ -55,7 +65,6 @@ class RandomExplorer(Explorer):
 
         # TODO: think whether to add additional *synthesized* pool
 
-
     def evolve_step(self):
         """
         TODO docs
@@ -76,7 +85,6 @@ class RandomExplorer(Explorer):
         if self.max_pool_size is not None:
             self.pool = sorted(self.pool, key=lambda mol: self.fitness_func(mol))[-self.max_pool_size:]
 
-
     def evolve(self, capital):
         """
         Params:
@@ -90,4 +98,13 @@ class RandomExplorer(Explorer):
         top = sorted(self.pool, key=lambda mol: self.fitness_func(mol))[-k:]
         return top
 
+
+# APIs
+# ======================================================================================
+def ga_optimise_from_args(func, max_capital):
+    explorer = RandomExplorer(func_caller.func)
+    explorer.evolve(max_capital)
+    top = explorer.get_best()
+    val = func(top)
+    return top, val
 

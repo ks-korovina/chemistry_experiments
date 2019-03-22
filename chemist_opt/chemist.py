@@ -5,27 +5,36 @@ Author: kkorovin@cs.cmu.edu
 
 
 TODO:
-* complete all places with ImplementMe
+* add an alternative to list_of_dists here and in mol_gp
 
 """
 
 import numpy as np
 
 # Local imports
-from opt.blackbox_optimiser import blackbox_opt_args
+from chemist_opt.blackbox_optimiser import blackbox_opt_args
 from mols.mol_gp import mol_gp_args, MolGPFitter
-from mols.mol_kernels import *  # kernel names
-from opt.nn_opt_utils import get_initial_pool
-from opt.gp_bandit import GPBandit, gp_bandit_args
+from mols.mol_kernels import *   # kernel names
+from datasets.loaders import get_initial_pool
+from chemist_opt.gp_bandit import GPBandit, gp_bandit_args
 from utils.general_utils import block_augment_array
 from utils.reporters import get_reporter
 from utils.option_handler import get_option_specs, load_options
 
 
-chemist_specific_args = []  # TODO
+# Options for acquisition optimizers:
+# - random_ga: randomly select subsets and synthesize
+# - ToBeAdded
+
+chemist_specific_args = [
+    get_option_specs('chemist_acq_opt_method', False, 'random_ga',
+    'Which method to use when optimising the acquisition. Will override acq_opt_method' +
+    ' in the arguments for gp_bandit.'),
+]
+
 
 all_chemist_args = chemist_specific_args + gp_bandit_args + \
-                     blackbox_opt_args + nn_gp_args
+                     blackbox_opt_args + mol_gp_args
 
 
 class Chemist(GPBandit):
@@ -34,42 +43,105 @@ class Chemist(GPBandit):
     To not have it inherit from any GPBandit,
     must merge and simplify all functionality.
     """
-    def __init__(self, func_caller, worker_manager, tp_comp, options=None, reporter=None):
-        # self.options.acq_opt_method = self.options.chemist_acq_opt_method
-        # super(Chemist, self)._child_set_up()
-        # self.list_of_dists = None
-        # self.already_evaluated_dists_for = None
-        # # Create a GP fitter with no data and use its tp_comp as the bandit's tp_comp
-        # init_gp_fitter = MolGPFitter([], [], self.domain.get_type(), tp_comp=self.tp_comp,
-        #                             list_of_dists=None, options=self.options,
-        #                             reporter=self.reporter)
-        # self.tp_comp = init_gp_fitter.tp_comp
-        # self.mislabel_coeffs = init_gp_fitter.mislabel_coeffs
-        # self.struct_coeffs = init_gp_fitter.struct_coeffs
-        
-        raise NotImplementedError("ImplementMe")
+    def __init__(self, func_caller, worker_manager, options=None, reporter=None):
+        if options is None:
+            reporter = get_reporter(reporter)
+            options = load_options(all_chemist_args, reporter=reporter)
+        super(Chemist, self).__init__(func_caller, worker_manager,
+                                      options=options, reporter=reporter)
 
     def _child_set_up(self):
         """ Child up. """
-        raise NotImplementedError("ImplementMe")
+        # First override the acquisition optisation method
+        self.options.acq_opt_method = self.options.chemist_acq_opt_method
+        # No cal the super function
+        super(Chemist, self)._child_set_up()
+        self.list_of_dists = None
+        self.already_evaluated_dists_for = None
+        # Create a GP fitter with no data and use its tp_comp as the bandit's tp_comp
+        init_gp_fitter = MolGPFitter([], [], options=self.options, reporter=self.reporter)
 
     def _set_up_acq_opt_ga(self):
-        raise NotImplementedError("ImplementMe")
+        self.ga_init_pool = get_initial_pool()
 
-    def _compute_list_of_dists(self, X1, X2):
-        raise NotImplementedError("ImplementMe")
+        # In future, implement Domains:
+        # # The initial pool
+        # self.ga_init_pool = get_initial_pool(self.domain.get_type())
+        # # The number of evaluations
+        # if self.get_acq_opt_max_evals is None:
+        #     lead_const = min(5, self.domain.get_dim())**2
+        #     self.get_acq_opt_max_evals = lambda t: np.clip(
+        #                   lead_const * np.sqrt(t), 50, 500)
+
+    # def _compute_list_of_dists(self, X1, X2):
+    #     raise NotImplementedError("ImplementMe")
 
     def _get_gp_fitter(self, reg_X, reg_Y):
-        raise NotImplementedError("ImplementMe")
+        """ Builds a NN GP. """
+        return MolGPFitter(reg_X, reg_Y,
+                           options=self.options,
+                           reporter=self.reporter)
+
 
     def _add_data_to_gp(self, new_points, new_vals):
-        raise NotImplementedError("ImplementMe")
+        """Adds data to the GP. Also tracks list_of_dists."""
+        ## First add it to the list of distances
+        # if self.list_of_dists is None:
+        #     # This is the first time, so use all the data.
+        #     reg_X, _ = self._get_reg_X_reg_Y()
+        #     self.list_of_dists = self._compute_list_of_dists(reg_X, reg_X)
+        #     self.already_evaluated_dists_for = reg_X
+        # else:
+        #     list_of_dists_old_new = self._compute_list_of_dists(
+        #                             self.already_evaluated_dists_for, new_points)
+        #     list_of_dists_new_new = self._compute_list_of_dists(new_points, new_points)
+        #     self.already_evaluated_dists_for.extend(new_points)
+        #     for idx in range(len(list_of_dists_old_new)):
+        #         self.list_of_dists[idx] = block_augment_array(
+        #             self.list_of_dists[idx], list_of_dists_old_new[idx],
+        #             list_of_dists_old_new[idx].T, list_of_dists_new_new[idx])
+
+        # Now add to the GP
+        if self.gp_processor.fit_type == 'fitted_gp':
+            self.gp.add_data(new_points, new_vals, build_posterior=False)
+            #self.gp.set_list_of_dists(self.list_of_dists)
+            self.gp.build_posterior()
 
     def _child_set_gp_data(self, reg_X, reg_Y):
-        raise NotImplementedError("ImplementMe")
+        """ Set Data for the child. """
+        # if self.list_of_dists is None:
+        #     self.list_of_dists = self._compute_list_of_dists(reg_X, reg_X)
+        #     self.already_evaluated_dists_for = reg_X
+        # if (len(reg_X), len(reg_Y)) != self.list_of_dists[0].shape:
+        #     print (len(reg_X)), len(reg_Y), self.list_of_dists[0].shape, self.step_idx
+        # assert (len(reg_X), len(reg_Y)) == self.list_of_dists[0].shape
+
+        # self.gp.set_list_of_dists(self.list_of_dists)
+        self.gp.set_data(reg_X, reg_Y, build_posterior=True)
 
 
 # APIs ---------------------------------------------------------
 
-# TODO
+def nasbot(func_caller, worker_manager, budget, mode=None,
+           init_pool=None, acq='hei', options=None, reporter='default'):
+    """ Chemist optimization from a function caller. """
+    if options is None:
+        reporter = get_reporter(reporter)
+        options = load_options(all_nasbot_args, reporter=reporter)
+
+    # TODO: what is this option?
+    if acq is not None:
+        options.acq = acq
+
+    if mode is not None:
+        options.mode = mode
+
+    # Initial queries
+    if not hasattr(options, 'pre_eval_points') or options.pre_eval_points is None:
+        if init_pool is None:
+            init_pool = get_initial_pool()
+        options.get_initial_points = lambda n: init_pool[:n]
+
+    return (Chemist(func_caller, worker_manager,
+             options=options, reporter=reporter)).optimise(budget)
 

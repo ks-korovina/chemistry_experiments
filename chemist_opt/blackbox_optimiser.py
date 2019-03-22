@@ -13,7 +13,7 @@ import time
 import numpy as np
 # Local imports
 from function_caller import EVAL_ERROR_CODE
-from nn.nn_examples import generate_many_neural_networks
+from datasets.loaders import generate_many_molecules
 from utils.option_handler import get_option_specs, load_options
 from utils.reporters import get_reporter
 
@@ -457,14 +457,14 @@ class RandomOptimiser(BlackboxOptimiser):
   def _determine_next_eval_point(self):
     """ Determine the next point for evaluation. """
     num_cands = 20
-    nns = generate_many_neural_networks('cnn', num_cands)
+    nns = generate_many_molecules(num_cands)
     rand_idx = np.random.randint(num_cands)
     return nns[rand_idx]
 
   def _determine_next_batch_of_eval_points(self):
     """ Determine the next point for evaluation. """
     num_cands = max(20, 5 * self.num_workers)
-    nns = generate_many_neural_networks('cnn', num_cands)
+    nns = generate_many_molecules(num_cands)
     rand_idxs = np.random.choice(num_cands, self.num_workers, replace=False)
     return [nns[i] for i in rand_idxs]
 

@@ -14,8 +14,8 @@ from argparse import Namespace
 import numpy as np
 
 # Local imports
-from opt import gpb_acquisitions
-from opt.blackbox_optimiser import blackbox_opt_args, BlackboxOptimiser
+from chemist_opt import gpb_acquisitions
+from chemist_opt.blackbox_optimiser import blackbox_opt_args, BlackboxOptimiser
 from gp.gp_core import GP
 from gp.gp_instances import SimpleGPFitter, all_simple_gp_args
 from utils.option_handler import get_option_specs, load_options

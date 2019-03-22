@@ -12,6 +12,8 @@ Author: kkorovin@cs.cmu.edu
 TODO:
     - Issue: for some reason graphkernels fails when graphs are attributed,
         this seems to be a serious drawback (that good are these kernels then?)
+    - Add other kernels and test performance
+    - Think of better kernels
 
 NOTES:
     - graphkernels reference: https://github.com/BorgwardtLab/GraphKernels

@@ -29,5 +29,14 @@ def get_chembl(n_mols=None, as_mols=True):
     return [Molecule(smile) for smile in res]
 
 
+def get_initial_pool():
+    """Used in chemist_opt.chemist"""
+    raise NotImplementedError("TODO")
+
+
+def generate_many_molecules():
+    raise NotImplementedError("TODO")
+
+
 if __name__ == "__main__":
     print(get_chembl()[:4])
