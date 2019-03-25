@@ -27,7 +27,7 @@ from utils.option_handler import get_option_specs, load_options
 # - ToBeAdded
 
 chemist_specific_args = [
-    get_option_specs('chemist_acq_opt_method', False, 'random_ga',
+    get_option_specs('chemist_acq_opt_method', False, 'ga',
     'Which method to use when optimising the acquisition. Will override acq_opt_method' +
     ' in the arguments for gp_bandit.'),
 ]
@@ -63,15 +63,16 @@ class Chemist(GPBandit):
 
     def _set_up_acq_opt_ga(self):
         self.ga_init_pool = get_initial_pool()
-
+        self.ga_mutation_op = lambda x: x
         # In future, implement Domains:
         # # The initial pool
         # self.ga_init_pool = get_initial_pool(self.domain.get_type())
         # # The number of evaluations
-        # if self.get_acq_opt_max_evals is None:
-        #     lead_const = min(5, self.domain.get_dim())**2
-        #     self.get_acq_opt_max_evals = lambda t: np.clip(
-        #                   lead_const * np.sqrt(t), 50, 500)
+        if self.get_acq_opt_max_evals is None:
+            #lead_const = min(5, self.domain.get_dim())**2
+            lead_const = 25
+            self.get_acq_opt_max_evals = lambda t: np.clip(
+                          lead_const * int(np.sqrt(t)), 50, 500)
 
     # def _compute_list_of_dists(self, X1, X2):
     #     raise NotImplementedError("ImplementMe")
@@ -122,7 +123,7 @@ class Chemist(GPBandit):
 
 # APIs ---------------------------------------------------------
 
-def nasbot(func_caller, worker_manager, budget, mode=None,
+def chemist(func_caller, worker_manager, budget, mode=None,
            init_pool=None, acq='hei', options=None, reporter='default'):
     """ Chemist optimization from a function caller. """
     if options is None:

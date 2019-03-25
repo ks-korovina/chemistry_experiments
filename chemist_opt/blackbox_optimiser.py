@@ -188,11 +188,14 @@ class BlackboxOptimiser(object):
       self.pre_eval_points = self.options.pre_eval_points
       self.num_pre_eval_points = len(self.options.pre_eval_points)
       self.curr_opt_val = max(self.pre_eval_vals)
-      self.curr_opt_pt = self.pre_eval_points[np.argmax(self.pre_eval_points)]
+      # TODO: this used to be
+      # self.curr_opt_pt = self.pre_eval_points[np.argmax(self.pre_eval_points)]
+      self.curr_opt_pt = self.pre_eval_points[np.argmax(self.pre_eval_vals)]
       self.pre_eval_true_vals = self.options.pre_eval_true_vals
       self.curr_true_opt_val = max(self.pre_eval_true_vals)
       self.curr_true_opt_pt = self.pre_eval_points[np.argmax(self.pre_eval_true_vals)]
       return
+
     # Get the initial points
     num_init_evals = int(self.options.num_init_evals)
     if num_init_evals > 0:

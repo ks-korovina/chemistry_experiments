@@ -22,7 +22,7 @@ from synth.forward_synth import RexgenForwardSynthesizer
 from rdkit import Chem
 from rdkit_contrib.sascorer import calculateScore as calculateSAScore
 from mols.data_struct import Molecule
-from datasets.loaders import get_chembl_prop
+from datasets.loaders import get_chembl_prop, get_initial_pool
 
 ga_opt_args = [
   # get_option_specs('num_mutations_per_epoch', False, 50,
@@ -46,7 +46,7 @@ class RandomExplorer(Explorer):
     Implements a random evolutionary algorithm
     for exploring molecule space.
     """
-    def __init__(self, fitness_func, initial_pool, max_pool_size=None):
+    def __init__(self, fitness_func, initial_pool=None, max_pool_size=None):
         """
         Params:
         :fitness_func: function to optimize over evolution
@@ -60,6 +60,8 @@ class RandomExplorer(Explorer):
         """
         self.fitness_func = fitness_func
         self.synth = RexgenForwardSynthesizer()
+        if initial_pool is None:
+            initial_pool = get_initial_pool()
         self.pool = initial_pool
         self.max_pool_size = max_pool_size
 
@@ -102,9 +104,18 @@ class RandomExplorer(Explorer):
 # APIs
 # ======================================================================================
 def ga_optimise_from_args(func, max_capital):
-    explorer = RandomExplorer(func_caller.func)
+    # the func may accept iterable or a single Molecule
+    mol = Molecule(smiles="c1cc(OCCCN2CCCCC2)ccc1CN1CCC2(CC1)OCCO2")
+    try:
+        func(mol)
+        func_ = func
+    except Exception as e:
+        # print("Failed,", e)
+        func_ = lambda m: func([m])
+
+    explorer = RandomExplorer(func_)
     explorer.evolve(max_capital)
-    top = explorer.get_best()
+    top = explorer.get_best(k=1)
     val = func(top)
     return top, val
 

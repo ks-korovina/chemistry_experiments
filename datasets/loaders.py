@@ -31,7 +31,7 @@ def get_chembl(n_mols=None, as_mols=True):
 
 def get_initial_pool():
     """Used in chemist_opt.chemist"""
-    raise NotImplementedError("TODO")
+    return get_chembl(10)
 
 
 def generate_many_molecules():

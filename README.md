@@ -12,7 +12,7 @@ ChEMBL data can be found here: https://github.com/kevinid/molecule_generator/rel
 
 ## Structure of the repo:
 
-* `datasets` contains datasets
+* `datasets` contains datasets and the `loaders.py` module, which provides dataset loading, initial pool for GA/Explorer, etc.
 * `mols` isolates all domain-related things: data structures for molecules, molecular kernels, molecular GP implementation, and various helpers for handling molecules.
 * `synth` contains models for performing synthesis (such as forward reaction prediction) in separation of the remaining framework. Data for training the model is stored in 'datasets/synth_data'. A better option would be training the predictor jointly with DOE, but that may be too difficult.
 * `gp` contains basic GP for any domain. It is completely borrowed from [Nasbot](https://github.com/kirthevasank/nasbot)

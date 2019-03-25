@@ -35,6 +35,7 @@ class Domain(object):
         """ Optimises the objective and returns it. """
         if opt_method == 'dflt_domain_opt_method':
             opt_method = self.dflt_domain_opt_method
+        print("MYSELF:", self)
         return self._child_maximise_obj(opt_method, obj, num_evals, *args, **kwargs)
 
     def _child_maximise_obj(self, opt_method, obj, num_evals, *args, **kwargs):
@@ -112,6 +113,12 @@ class MolDomain(Domain):
         self.constraint_checker = constraint_checker
         super(MolDomain, self).__init__('ga')
 
+    @staticmethod
+    def maximise_obj(opt_method, obj, num_evals, *args, **kwargs):
+        """ Optimises the objective and returns it. """
+        opt_pt, opt_val = ga_optimise_from_args(obj, num_evals)
+        return opt_val, opt_pt
+
     def _child_maximise_obj(self, opt_method, obj, num_evals, *args, **kwargs):
         """ Child class implementation for optimising an objective. """
         if opt_method == 'ga':
@@ -119,7 +126,7 @@ class MolDomain(Domain):
         elif opt_method == 'rand_ga':
             return self._rand_ga_maximise(obj, num_evals)
         else:
-            raise ValueError('Unknown method=%s for NNDomain'%(opt_method))
+            raise ValueError('Unknown method=%s for MolDomain'%(opt_method))
 
     def _ga_maximise(self, obj, num_evals, mutation_op, 
                      init_pool, init_pool_vals=None,
@@ -136,7 +143,7 @@ class MolDomain(Domain):
 
     def _rand_ga_maximise(self, obj, num_evals):
         """ Maximise over the space of neural networks via rand_ga. """
-        raise NotImplementedError('Not implemented rand_ga for NNDomain yet.')
+        raise NotImplementedError('Not implemented rand_ga for MolDomain yet.')
 
     def get_default_kernel(self, tp_comp, mislabel_coeffs, struct_coefs, powers,
                                                  dist_type, range_Y):

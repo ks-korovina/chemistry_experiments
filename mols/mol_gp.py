@@ -63,6 +63,10 @@ class MolGP(gp_core.GP):
         """ Compute the kernel matrix from distances if they are provided. """
         return self.kernel(self.X, self.X)
 
+    def _child_str(self):
+        """ Description of the child GP. """
+        return self.kernel.kernel_type
+
     @classmethod
     def _get_kernel_from_type(cls, kernel_type, kernel_hyperparams):
         """ Returns the kernel with set hyperparams. """

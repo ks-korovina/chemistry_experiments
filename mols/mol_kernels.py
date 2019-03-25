@@ -145,6 +145,7 @@ KERNEL_FUNCS = {
 
 class MolKernel(Kernel):
     def __init__(self, kernel_type, kernel_hyperparams):
+        self.kernel_type = kernel_type
         if kernel_type not in KERNEL_FUNCS:
             raise ValueError('Unknown kernel_type %s.'%kernel_type)
         self.kernel_func = KERNEL_FUNCS[kernel_type]
