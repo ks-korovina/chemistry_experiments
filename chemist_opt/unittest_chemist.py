@@ -67,7 +67,7 @@ class ChemistTestCase(BaseTestClass):
         # assert opt_val == history.curr_opt_vals[-1]
         # test_if_pre_eval_networks_have_changed(options, options_clone)
 
-    def test_nasbot_optimisation_single(self):
+    def _test_nasbot_optimisation_single(self):
         """ Tests optimisation with a single worker. """
         pass
 
@@ -75,7 +75,7 @@ class ChemistTestCase(BaseTestClass):
         worker_manager = SyntheticWorkerManager(1, time_distro='const')
         func_caller = FunctionCaller(mol_func, MolDomain)
         options, options_clone, reporter = self._get_optimiser_args()
-        opt_val, opt_pt, history = chemist.chemist(func_caller, worker_manager, 10,
+        opt_val, opt_pt, history = chemist.optimize_chemist(func_caller, worker_manager, 10,
                                                     options=options, reporter=reporter)
         # self._test_optimiser_results(opt_val, opt_pt, history, options, options_clone)
         # self.report('')

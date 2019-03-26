@@ -123,12 +123,12 @@ class Chemist(GPBandit):
 
 # APIs ---------------------------------------------------------
 
-def chemist(func_caller, worker_manager, budget, mode=None,
+def optimize_chemist(func_caller, worker_manager, budget, mode=None,
            init_pool=None, acq='hei', options=None, reporter='default'):
     """ Chemist optimization from a function caller. """
     if options is None:
         reporter = get_reporter(reporter)
-        options = load_options(all_nasbot_args, reporter=reporter)
+        options = load_options(all_chemist_args, reporter=reporter)
 
     # TODO: what is this option?
     if acq is not None:

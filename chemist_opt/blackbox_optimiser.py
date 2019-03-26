@@ -12,7 +12,7 @@ from argparse import Namespace
 import time
 import numpy as np
 # Local imports
-from function_caller import EVAL_ERROR_CODE
+from chemist_opt.function_caller import EVAL_ERROR_CODE
 from datasets.loaders import generate_many_molecules
 from utils.option_handler import get_option_specs, load_options
 from utils.reporters import get_reporter
@@ -254,6 +254,7 @@ class BlackboxOptimiser(object):
         # Get the latest set of results and dispatch the next job.
         self.set_curr_spent_capital(last_receive_time)
         latest_results = self.worker_manager.fetch_latest_results()
+        print("Fetched latest results:", latest_results)
         for qinfo_result in latest_results:
           self._update_history(qinfo_result)
           self._remove_from_in_progress(qinfo_result)

@@ -141,6 +141,11 @@ class MolDomain(Domain):
         opt_pt, opt_val = ga_optimise_from_args(obj, num_evals)
         return opt_val, opt_pt
 
+        ###### TODO: call like the following: #######
+        # ga_optimise_from_args(func_caller, worker_manager, num_evals, 'asy', mutation_op,
+        #                       options=options, reporter=reporter)
+
+
     def _rand_ga_maximise(self, obj, num_evals):
         """ Maximise over the space of neural networks via rand_ga. """
         raise NotImplementedError('Not implemented rand_ga for MolDomain yet.')
